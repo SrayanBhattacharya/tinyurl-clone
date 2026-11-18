@@ -1,7 +1,10 @@
 package com.tinyurl.backend.url;
 
+import com.tinyurl.backend.common.ApiException;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.ResponseStatus;
 
-@ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
-class KeyPoolExhaustedException extends RuntimeException {}
+class KeyPoolExhaustedException extends ApiException {
+    KeyPoolExhaustedException() {
+        super(HttpStatus.SERVICE_UNAVAILABLE, "No short keys available, try again later");
+    }
+}

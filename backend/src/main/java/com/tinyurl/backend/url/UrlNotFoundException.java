@@ -1,7 +1,10 @@
 package com.tinyurl.backend.url;
 
+import com.tinyurl.backend.common.ApiException;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.ResponseStatus;
 
-@ResponseStatus(HttpStatus.NOT_FOUND)
-class UrlNotFoundException extends RuntimeException {}
+class UrlNotFoundException extends ApiException {
+    UrlNotFoundException() {
+        super(HttpStatus.NOT_FOUND, "Short URL not found or expired");
+    }
+}
