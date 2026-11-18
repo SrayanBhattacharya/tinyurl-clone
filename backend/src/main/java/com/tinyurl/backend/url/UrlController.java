@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.*;
 import java.net.URI;
 
 @RestController
-@RequestMapping("/api/urls")
 @RequiredArgsConstructor
 class UrlController {
     private final UrlService service;
@@ -20,7 +19,7 @@ class UrlController {
     @Value("${app.base-url}")
     private String baseUrl;
 
-    @PostMapping
+    @PostMapping("/api/urls")
     @ResponseStatus(HttpStatus.CREATED)
     CreateUrlResponse create(@Valid @RequestBody CreateUrlRequest req) {
         String key = service.create(req.longUrl(), req.creatorId());
