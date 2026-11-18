@@ -26,10 +26,15 @@ class UrlService {
         """;
 
     private final JdbcTemplate jdbc;
+    private final UrlMappingRepository repo;
 
     String create(String longUrl, Long creatorId) {
         List<String> keys = jdbc.queryForList(CLAIM_SQL, String.class, creatorId, longUrl);
         if (keys.isEmpty()) throw new KeyPoolExhaustedException();
         return keys.get(0);
+    }
+
+    String resolve(String key) {
+        return repo.findActiveLongUrl(key).orElseThrow(UrlNotFoundException::new);
     }
 }
