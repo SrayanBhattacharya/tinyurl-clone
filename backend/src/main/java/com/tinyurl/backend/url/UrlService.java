@@ -27,6 +27,7 @@ class UrlService {
 
     private final JdbcTemplate jdbc;
     private final UrlMappingRepository repo;
+    private final UrlCache cache;
 
     String create(String longUrl, Long creatorId) {
         List<String> keys = jdbc.queryForList(CLAIM_SQL, String.class, creatorId, longUrl);
@@ -35,6 +36,10 @@ class UrlService {
     }
 
     String resolve(String key) {
-        return repo.findActiveLongUrl(key).orElseThrow(UrlNotFoundException::new);
+        return cache.get(key).orElseGet(() -> {
+            var target = repo.findActiveTarget(key).orElseThrow(UrlNotFoundException::new);
+            cache.put(key, target.getLongUrl(), target.getExpiryTime());
+            return target.getLongUrl();
+        });
     }
 }

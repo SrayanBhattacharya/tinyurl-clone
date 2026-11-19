@@ -10,6 +10,9 @@ spring:
     redis:
       host: localhost
       port: 6379
+      timeout: 200ms
 
 app:
   base-url: http://localhost:8080
+  cache:
+    max-ttl: 1h
