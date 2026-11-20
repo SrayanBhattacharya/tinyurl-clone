@@ -26,7 +26,7 @@
 
 ## Performance Notes
 - **Highest rate passing all thresholds**: Target `(READ_RATE=1000, WRITE_RATE=60)` achieving 1055.73 actual reqs/s with Read p95 of 3.41ms, Create p95 of 3.12ms, 0.00% errors, and 0 dropped iterations.
-- **Degradation point**: Degradation between 1000/60 and 2000/120 req/s is not CPU- or RAM-bound (~75% CPU idle, 2.4/7.4 GiB RAM, no swap during the run). `pg_stat_activity` during the run showed write connections waiting on WAL (WALWrite/WalSync): slow commit fsync on WSL2 keeps creates holding the 10-connection Hikari pool, so redirect reads queue behind them. Single snapshot; hypothesis, not proven. Redis should relieve the read side only. Per the ramp stop criteria, the ramp was halted early and `(3805, 228)` was skipped.
+- **Degradation & Redis Comparison**: No-cache: degradation between 1000/60 and 2000/120 was not CPU- or RAM-bound (~75% CPU idle, no swap). With Redis, the same 2000/120 run showed redirect p95 ~2.4ms and create p95 ~6ms with 0 dropped iterations (vs 499ms / 517ms and 22,577 dropped without). Consistent with DB connection-pool contention between reads and creates; removing reads from the DB relieved both. Hit ratio 99.76% on a 200-key workload (best case, not a production estimate).
 
 ---
 
