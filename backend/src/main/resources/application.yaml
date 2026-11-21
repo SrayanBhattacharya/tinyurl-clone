@@ -16,3 +16,8 @@ app:
   base-url: http://localhost:8080
   cache:
     max-ttl: 1h
+
+  replica:
+    url: jdbc:postgresql://localhost:5433/tinyurl
+    username: tiny
+    password: tiny

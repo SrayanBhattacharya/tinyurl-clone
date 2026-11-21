@@ -1,13 +1,17 @@
 package com.tinyurl.backend.url;
 
+import com.tinyurl.backend.url.dto.UrlTarget;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 class UrlService {
     private static final String CLAIM_SQL = """
         WITH candidate AS (
@@ -28,6 +32,7 @@ class UrlService {
     private final JdbcTemplate jdbc;
     private final UrlMappingRepository repo;
     private final UrlCache cache;
+    private final UrlReplicaReader replica;
 
     String create(String longUrl, Long creatorId) {
         List<String> keys = jdbc.queryForList(CLAIM_SQL, String.class, creatorId, longUrl);
@@ -37,9 +42,19 @@ class UrlService {
 
     String resolve(String key) {
         return cache.get(key).orElseGet(() -> {
-            var target = repo.findActiveTarget(key).orElseThrow(UrlNotFoundException::new);
-            cache.put(key, target.getLongUrl(), target.getExpiryTime());
-            return target.getLongUrl();
+            UrlTarget t = lookup(key).orElseThrow(UrlNotFoundException::new);
+            cache.put(key, t.longUrl(), t.expiryTime());
+            return t.longUrl();
         });
+    }
+
+    private Optional<UrlTarget> lookup(String key) {
+        try {
+            Optional<UrlTarget> fromReplica = replica.findActiveTarget(key);
+            if (fromReplica.isPresent()) return fromReplica;
+        } catch (RuntimeException e) {
+            log.warn("Replica read failed, using leader: {}", e.toString());
+        }
+        return repo.findActiveTarget(key);   // replica miss or failure -> leader
     }
 }
